@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+}
+
+group 'com.zwb.test'
+version '5.3.23'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(":spring-context")
+    implementation project(":spring-aspects")
+    implementation project(":spring-beans")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
