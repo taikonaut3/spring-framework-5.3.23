@@ -16,9 +16,6 @@
 
 package org.springframework.context.annotation;
 
-import java.util.Arrays;
-import java.util.function.Supplier;
-
 import org.springframework.beans.factory.config.BeanDefinitionCustomizer;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -27,6 +24,9 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.metrics.StartupStep;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.util.Arrays;
+import java.util.function.Supplier;
 
 /**
  * Standalone application context, accepting <em>component classes</em> as input &mdash;
@@ -66,8 +66,10 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 */
 	public AnnotationConfigApplicationContext() {
 		StartupStep createAnnotatedBeanDefReader = this.getApplicationStartup().start("spring.context.annotated-bean-reader.create");
+		// todo 注册@Configuration @Autowired 的处理器以及事件监听的 beanDef (注册了一些特定的beanDef)
 		this.reader = new AnnotatedBeanDefinitionReader(this);
 		createAnnotatedBeanDefReader.end();
+		// todo 添加对@Component的扫描支持(如果支持javax.annotation.ManagedBean和javax.inject.Named注解的也支持)
 		this.scanner = new ClassPathBeanDefinitionScanner(this);
 	}
 
@@ -88,8 +90,13 @@ public class AnnotationConfigApplicationContext extends GenericApplicationContex
 	 * {@link Configuration @Configuration} classes
 	 */
 	public AnnotationConfigApplicationContext(Class<?>... componentClasses) {
+		// todo 注册特定的beanDefinition以及添加对含有@Component的支持
 		this();
+		// todo 注册这些组件(配置文件)到 beanDefinitionMap
 		register(componentClasses);
+		//todo 以上两步添加了一些 beanDefinition，这些 beanDefinition 中会有处理注解相关的配置文件
+		// 如：org.springframework.context.annotation.internalConfigurationAnnotationProcessor
+		// 该 beanDefinition 会在 refresh()中的 invokeBeanFactoryPostProcessors() 方法中处理注解版的配置文件
 		refresh();
 	}
 

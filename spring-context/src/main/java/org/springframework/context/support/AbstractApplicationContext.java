@@ -16,21 +16,8 @@
 
 package org.springframework.context.support;
 
-import java.io.IOException;
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.CachedIntrospectionResults;
 import org.springframework.beans.factory.BeanFactory;
@@ -40,30 +27,8 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.support.ResourceEditorRegistrar;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.ApplicationStartupAware;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.EmbeddedValueResolverAware;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.context.HierarchicalMessageSource;
-import org.springframework.context.LifecycleProcessor;
-import org.springframework.context.MessageSource;
-import org.springframework.context.MessageSourceAware;
-import org.springframework.context.MessageSourceResolvable;
-import org.springframework.context.NoSuchMessageException;
-import org.springframework.context.PayloadApplicationEvent;
-import org.springframework.context.ResourceLoaderAware;
-import org.springframework.context.event.ApplicationEventMulticaster;
-import org.springframework.context.event.ContextClosedEvent;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.ContextStartedEvent;
-import org.springframework.context.event.ContextStoppedEvent;
-import org.springframework.context.event.SimpleApplicationEventMulticaster;
+import org.springframework.context.*;
+import org.springframework.context.event.*;
 import org.springframework.context.expression.StandardBeanExpressionResolver;
 import org.springframework.context.weaving.LoadTimeWeaverAware;
 import org.springframework.context.weaving.LoadTimeWeaverAwareProcessor;
@@ -87,6 +52,11 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ReflectionUtils;
+
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Abstract implementation of the {@link org.springframework.context.ApplicationContext}
@@ -547,39 +517,66 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			StartupStep contextRefresh = this.applicationStartup.start("spring.context.refresh");
 
 			// Prepare this context for refreshing.
+			// todo 刷新前的预处理
+			/** 表示再真正refresh操作之前需要准备的事情：
+			 *       设置Spring容器的启动时间；
+			 *       开启活跃状态，撤销关闭状态；
+			 *       验证环境信息中必须存在的属性
+			 * */
 			prepareRefresh();
 
 			// Tell the subclass to refresh the internal bean factory.
+			//todo 获取内部的BeanFactory
+			// todo*** 注解版本 ***： 设置了一下 beanFactory 的 serializationId
+			/** new AnnotationConfigApplicationContext() 时已近创建好 BeanFactory 并加载了一些 BeanDefinition */
+			// todo *** xml版本 ***： 会读取xml配置文件并加载到 BeanDefinitionMap 中
+			/** xml版本在这里才创建 BeanFactory，并在此已经加载了我们配置文件中的信息到 BeanDefinitionMap*/
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
 
 			// Prepare the bean factory for use in this context.
+			// todo beanFactory的预备工作
+			/** 为 beanFactory 配置一些特性：如 类加载器 和 一些 beanPostProcessor 并添加 【系统环境信息】相关的单例 bean */
 			prepareBeanFactory(beanFactory);
 
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
+				// todo 扩展方法 (没有任何实现) ，用户可自行扩展
 				postProcessBeanFactory(beanFactory);
 
 				StartupStep beanPostProcess = this.applicationStartup.start("spring.context.beans.post-process");
 				// Invoke factory processors registered as beans in the context.
+				/** 注解版本-在这里才加载我们配置文件中的信息到 BeanDefinitionMap 中*/
+				//todo 调用 BeanFactoryPostProcessor (对 *** @Component及其衍生注解 *** 的处理在此)
+				// 包括调用 BeanDefinitionRegistryPostProcessor 其中 (ConfigurationClassPostProcessor类是对@Configuration修饰的配置类的后置处理)
+				// 对配置类的处理中包括【包扫描】，会对 @Component及其衍生注解的进行处理注册进 BeanDefinitionMap 中
+				// 然后对配置类中的 @Bean 以及 @import 进行处理
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
+				// todo 添加 BeanPostProcessor *** 对@Auowired的后置处理器添加在此 ***
 				registerBeanPostProcessors(beanFactory);
 				beanPostProcess.end();
 
 				// Initialize message source for this context.
+				// todo 初始化 message source
+				/** 做国际化功能；消息绑定，消息解析 */
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
+				// todo 初始化时间派发器
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
+				// todo 扩展方法 (没有任何实现) ，用户可自行扩展
 				onRefresh();
 
 				// Check for listener beans and register them.
+				// todo 注册应用的监听器
+				/** 如：注册实现了 ApplicationListener 接口的监听器 Bean */
 				registerListeners();
 
 				// Instantiate all remaining (non-lazy-init) singletons.
+				// todo 初始化所有剩下的非懒加载的 Bean  -----> 进入Bean的生命周期...
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
@@ -679,14 +676,17 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 */
 	protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
 		// Tell the internal bean factory to use the context's class loader etc.
+		// todo 为内部的beanFactory添加 上下文的 类加载器
 		beanFactory.setBeanClassLoader(getClassLoader());
 		if (!shouldIgnoreSpel) {
+			// todo 添加对 spring el 表达式的解析
 			beanFactory.setBeanExpressionResolver(new StandardBeanExpressionResolver(beanFactory.getBeanClassLoader()));
 		}
+		// 注册编辑器？？？
 		beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()));
-
 		// Configure the bean factory with context callbacks.
 		beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
+		// todo 忽略的 Aware 接口
 		beanFactory.ignoreDependencyInterface(EnvironmentAware.class);
 		beanFactory.ignoreDependencyInterface(EmbeddedValueResolverAware.class);
 		beanFactory.ignoreDependencyInterface(ResourceLoaderAware.class);
@@ -915,6 +915,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 		beanFactory.freezeConfiguration();
 
 		// Instantiate all remaining (non-lazy-init) singletons.
+		// todo 实例化所有非懒加载的单例 bean
 		beanFactory.preInstantiateSingletons();
 	}
 
