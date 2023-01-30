@@ -13,10 +13,16 @@ dependencies {
     implementation project(":spring-context")
     implementation project(":spring-aspects")
     implementation project(":spring-beans")
+    implementation project(":spring-webmvc")
+    compileOnly("javax.servlet:javax.servlet-api")
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-}
 
+    // https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-core
+    implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-core', version: '8.5.73'
+    implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '8.5.73'
+
+}
 test {
     useJUnitPlatform()
 }
