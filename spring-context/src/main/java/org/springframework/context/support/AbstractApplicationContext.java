@@ -580,7 +580,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				finishBeanFactoryInitialization(beanFactory);
 
 				// Last step: publish corresponding event.
-				// todo 发布一些事件
+				// todo 发布一些事件（如：初始化mvc的九大组件）
 				finishRefresh();
 			}
 

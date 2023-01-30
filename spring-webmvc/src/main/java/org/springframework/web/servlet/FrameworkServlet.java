@@ -572,6 +572,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 						// todo 真正的形成父子容器
 						cwac.setParent(rootContext);
 					}
+					// todo 刷新子容器 --> 这里会增加事件监听器
 					configureAndRefreshWebApplicationContext(cwac);
 				}
 			}
@@ -684,6 +685,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 		wac.setServletContext(getServletContext());
 		wac.setServletConfig(getServletConfig());
 		wac.setNamespace(getNamespace());
+		// todo 容器中添加监听器，refresh()最后一步发布事件会调用该监听器去刷新九大组件
 		wac.addApplicationListener(new SourceFilteringListener(wac, new ContextRefreshListener()));
 
 		// The wac environment's #initPropertySources will be called in any case when the context
