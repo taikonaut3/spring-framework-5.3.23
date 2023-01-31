@@ -133,8 +133,7 @@ class ConfigurationClassBeanDefinitionReader {
 			this.importRegistry.removeImportingClass(configClass.getMetadata().getClassName());
 			return;
 		}
-
-		// todo 处理 @Import 导入的配置类
+		// todo 此置类是通过@Import注册的还是由于嵌套在另一个配置类中而自动注册的
 		if (configClass.isImported()) {
 			registerBeanDefinitionForImportedConfigurationClass(configClass);
 		}
@@ -143,8 +142,9 @@ class ConfigurationClassBeanDefinitionReader {
 			loadBeanDefinitionsForBeanMethod(beanMethod);
 		}
 
-		// todo @Import 的处理
+
 		loadBeanDefinitionsFromImportedResources(configClass.getImportedResources());
+		// todo @Import 的处理对实现 ImportBeanDefinitionRegister
 		loadBeanDefinitionsFromRegistrars(configClass.getImportBeanDefinitionRegistrars());
 	}
 

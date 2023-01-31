@@ -149,6 +149,7 @@ class ConfigurationClassParser {
 			BeanDefinition bd = holder.getBeanDefinition();
 			try {
 				if (bd instanceof AnnotatedBeanDefinition) {
+					// todo 解析配置类 (普通的@Import导入的配置类也会会在这里处理)
 					parse(((AnnotatedBeanDefinition) bd).getMetadata(), holder.getBeanName());
 				}
 				else if (bd instanceof AbstractBeanDefinition && ((AbstractBeanDefinition) bd).hasBeanClass()) {
@@ -167,6 +168,7 @@ class ConfigurationClassParser {
 			}
 		}
 
+		// todo *** 处理@Import导入的实现 ImportSelector 的配置 (springboot自动装备核心调用的方法入口) ***
 		this.deferredImportSelectorHandler.process();
 	}
 
@@ -224,7 +226,7 @@ class ConfigurationClassParser {
 		// Recursively process the configuration class and its superclass hierarchy.
 		SourceClass sourceClass = asSourceClass(configClass, filter);
 		do {
-			// todo 处理配置类上的一些注解如 @ComponentScan，@PropertySources等
+			// todo 处理配置类上的一些注解如 @ComponentScan，@PropertySources，@Import等
 			sourceClass = doProcessConfigurationClass(configClass, sourceClass, filter);
 		}
 		while (sourceClass != null);
@@ -286,6 +288,7 @@ class ConfigurationClassParser {
 		}
 
 		// Process any @Import annotations
+		// todo *** 处理@Import *** springboot--->相关的(ImportSelector or ImportBeanDefinitionRegistrar) 类型的没有处理
 		processImports(configClass, sourceClass, getImports(sourceClass), filter, true);
 
 		// Process any @ImportResource annotations
@@ -543,6 +546,7 @@ class ConfigurationClassParser {
 			this.importStack.push(configClass);
 			try {
 				for (SourceClass candidate : importCandidates) {
+					// todo *** springboot 自动装配 相关接口 ***
 					if (candidate.isAssignable(ImportSelector.class)) {
 						// Candidate class is an ImportSelector -> delegate to it to determine imports
 						Class<?> candidateClass = candidate.loadClass();
@@ -573,6 +577,7 @@ class ConfigurationClassParser {
 					else {
 						// Candidate class not an ImportSelector or ImportBeanDefinitionRegistrar ->
 						// process it as an @Configuration class
+						// todo 导入配置类不是ImportSelector或ImportBeanDefinitionRegister->将其作为@Configuration类处理
 						this.importStack.registerImport(
 								currentSourceClass.getMetadata(), candidate.getMetadata().getClassName());
 						processConfigurationClass(candidate.asConfigClass(configClass), exclusionFilter);
@@ -756,6 +761,7 @@ class ConfigurationClassParser {
 					DeferredImportSelectorGroupingHandler handler = new DeferredImportSelectorGroupingHandler();
 					deferredImports.sort(DEFERRED_IMPORT_COMPARATOR);
 					deferredImports.forEach(handler::register);
+					// todo
 					handler.processGroupImports();
 				}
 			}
