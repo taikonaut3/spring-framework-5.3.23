@@ -486,7 +486,8 @@ public class DispatcherServlet extends FrameworkServlet {
 	protected void initStrategies(ApplicationContext context) {
 		// 没有给默认的实现
 		initMultipartResolver(context);
-		// todo 在此会初始化默认的以下八大组件，加载从spring-webmvc的资源目录下的 DispatcherServlet.properties 文件
+		// todo 先从容器中拿，没有的话，在此会初始化默认的以下八大组件
+		//  加载从spring-webmvc的资源目录下的 DispatcherServlet.properties 文件
 		initLocaleResolver(context);
 		initThemeResolver(context);
 		initHandlerMappings(context);
@@ -953,6 +954,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		}
 
 		try {
+			// todo 处理请求的核心方法
 			doDispatch(request, response);
 		}
 		finally {
@@ -1025,6 +1027,7 @@ public class DispatcherServlet extends FrameworkServlet {
 		HandlerExecutionChain mappedHandler = null;
 		boolean multipartRequestParsed = false;
 
+		// todo 异步相关
 		WebAsyncManager asyncManager = WebAsyncUtils.getAsyncManager(request);
 
 		try {
@@ -1032,10 +1035,12 @@ public class DispatcherServlet extends FrameworkServlet {
 			Exception dispatchException = null;
 
 			try {
+				// todo 检查是否是文件上传请求
 				processedRequest = checkMultipart(request);
 				multipartRequestParsed = (processedRequest != request);
 
 				// Determine handler for the current request.
+				// todo *** 获取该请求执行的handler ***
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
 					noHandlerFound(processedRequest, response);
