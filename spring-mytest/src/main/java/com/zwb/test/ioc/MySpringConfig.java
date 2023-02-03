@@ -10,7 +10,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * @since 2022-10-26 16:15
  */
 @Configuration
-@ComponentScan("com.zwb.test.ioc")
+@ComponentScan("com.zwb.test")
 @EnableAspectJAutoProxy
 public class MySpringConfig {
 

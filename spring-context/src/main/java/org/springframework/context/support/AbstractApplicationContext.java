@@ -567,7 +567,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.
-				// todo 扩展方法 (没有任何实现) ，用户可自行扩展
+				// todo 扩展方法 (没有任何实现) ，用户可自行扩展  *** (springboot创建web服务器会调用该方法) ***
 				onRefresh();
 
 				// Check for listener beans and register them.
